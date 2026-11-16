@@ -134,7 +134,7 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
                 .decoration(TextDecoration.ITALIC, false);
             Component action = Component.empty()
                 .append(Component.text("▰", green))
-                .append(Component.text("▏ LMB TO ", TextColor.fromHexString("#BDBDBD")))
+                .append(Component.text("▏ LMB TO ", TextColor.fromHexString("#A8A8A8")))
                 .append(Component.text("JOIN", green))
                 .decoration(TextDecoration.ITALIC, false);
             meta.displayName(title);
