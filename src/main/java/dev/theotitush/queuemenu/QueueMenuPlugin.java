@@ -138,6 +138,7 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
         boolean featuredQueue = name.equalsIgnoreCase("Sword")
             || name.equalsIgnoreCase("Axe")
             || name.equalsIgnoreCase("Mace")
+            || name.equalsIgnoreCase("Spear")
             || name.equalsIgnoreCase("Netherite");
 
         if (featuredQueue) {
@@ -151,7 +152,10 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
                     "#73FFEC", "#73FFEC", "#73FFEC"
                 });
                 // Per-character colours sampled from the supplied SPEAR MACE tooltip.
-                case "MACE" -> sampledGradient("SPEAR MACE", new String[] {
+                case "MACE" -> sampledGradient("MACE", new String[] {
+                    "#DAE7E8", "#D5EBED", "#D7EDF0", "#DFEEF0"
+                });
+                case "SPEAR" -> sampledGradient("SPEAR MACE", new String[] {
                     "#9153D9", "#A84CD8", "#BE46D8", "#D53FD7", "#EB38D6",
                     "#EB38D6", "#EB38D6", "#EB38D6", "#EB38D6"
                 });
@@ -203,7 +207,7 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
 
         // Preset queue icons, arranged like the two icon rows in the reference.
         Material[] materials = {
-            Material.DIAMOND_SWORD, Material.DIAMOND_AXE, Material.NETHERITE_SPEAR,
+            Material.DIAMOND_SWORD, Material.DIAMOND_AXE, Material.MACE, Material.NETHERITE_SPEAR,
             Material.NETHERITE_SWORD, Material.IRON_SWORD, Material.CROSSBOW,
             Material.DIAMOND_CHESTPLATE,
             Material.SHIELD, Material.TOTEM_OF_UNDYING, Material.GOLDEN_APPLE,
@@ -211,10 +215,10 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
             Material.DIAMOND
         };
         String[] names = {
-            "Sword", "Axe", "Mace", "Netherite", "Classic", "Crossbow", "Armour",
+            "Sword", "Axe", "Mace", "Spear", "Netherite", "Classic", "Crossbow", "Armour",
             "Shield", "Totem", "Gapple", "Special", "Economy", "Pearl", "Diamond"
         };
-        int[] slots = {19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34};
+        int[] slots = {19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34, 37};
         for (int i = 0; i < materials.length; i++) {
             inventory.setItem(slots[i], namedItem(materials[i], names[i], "Preset queue"));
         }
