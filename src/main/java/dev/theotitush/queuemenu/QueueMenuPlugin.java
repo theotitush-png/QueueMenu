@@ -109,33 +109,55 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
         }
     }
 
+    private Component sampledGradient(String text, String[] colors) {
+        Component result = Component.empty();
+        int colorIndex = 0;
+        for (int i = 0; i < text.length(); i++) {
+            String character = String.valueOf(text.charAt(i));
+            if (character.equals(" ")) {
+                result = result.append(Component.text(" "));
+                continue;
+            }
+            String hex = colors[Math.min(colorIndex, colors.length - 1)];
+            result = result.append(Component.text(character, TextColor.fromHexString(hex))
+                .decoration(TextDecoration.BOLD, true)
+                .decoration(TextDecoration.ITALIC, false));
+            colorIndex++;
+        }
+        return result;
+    }
+
     private ItemStack namedItem(Material material, String name, String lore) {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
 
         boolean featuredQueue = name.equalsIgnoreCase("Sword")
             || name.equalsIgnoreCase("Axe")
-            || name.equalsIgnoreCase("Mace");
+            || name.equalsIgnoreCase("Mace")
+            || name.equalsIgnoreCase("Netherite");
 
         if (featuredQueue) {
-            // Sampled from the supplied in-game screenshots:
-            // SWORD #9FF4F6, AXE #73FFEC, MACE #EEEEEE.
-            // The JOIN text and green indicator use the screenshot green #08FB54.
-            String titleHex = switch (name.toUpperCase(java.util.Locale.ROOT)) {
-                case "SWORD" -> "#9FF4F6";
-                case "AXE" -> "#73FFEC";
-                case "MACE" -> "#EEEEEE";
-                default -> "#EEEEEE";
+            Component title = switch (name.toUpperCase(java.util.Locale.ROOT)) {
+                case "SWORD" -> Component.text("SWORD", TextColor.fromHexString("#9FF4F6"));
+                case "AXE" -> Component.text("AXE", TextColor.fromHexString("#73FFEC"));
+                // Per-character colours sampled from the supplied SPEAR MACE tooltip.
+                case "MACE" -> sampledGradient("SPEAR MACE", new String[] {
+                    "#9153D9", "#A84CD8", "#BE46D8", "#D53FD7", "#EB38D6",
+                    "#EB38D6", "#EB38D6", "#EB38D6", "#EB38D6"
+                });
+                // Per-character colours sampled from the supplied NETHERITE POT tooltip.
+                case "NETHERITE" -> sampledGradient("NETHERITE POT", new String[] {
+                    "#D6512F", "#D85631", "#D95B34", "#DB6136", "#DD6638",
+                    "#DE6B3B", "#E0703D", "#DE6B3B", "#DD6638", "#D95B34",
+                    "#D85631", "#D6512F"
+                });
+                default -> Component.text(name.toUpperCase(java.util.Locale.ROOT), NamedTextColor.WHITE);
             };
-            TextColor titleColor = TextColor.fromHexString(titleHex);
-            TextColor green = TextColor.fromHexString("#08FB54");
-            Component title = Component.text(name.toUpperCase(java.util.Locale.ROOT), titleColor)
-                .decoration(TextDecoration.BOLD, true)
-                .decoration(TextDecoration.ITALIC, false);
+
             Component action = Component.empty()
-                .append(Component.text("▰", green))
+                .append(Component.text("▰", TextColor.fromHexString("#08FB54")))
                 .append(Component.text("▏ LMB TO ", TextColor.fromHexString("#A8A8A8")))
-                .append(Component.text("JOIN", green))
+                .append(Component.text("JOIN", TextColor.fromHexString("#08FB54")))
                 .decoration(TextDecoration.ITALIC, false);
             meta.displayName(title);
             meta.lore(java.util.List.of(action));
