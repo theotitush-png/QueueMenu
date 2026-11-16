@@ -145,8 +145,9 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
                 // Per-character colours sampled from the supplied SWORD tooltip.
                 case "SWORD" -> sampledGradient("SWORD", new String[] {
                     "#A8D4FF", "#9FEFFF", "#9CFCF9", "#9FF4F6", "#A8D4FF"
-                }, false); // weight matches AXE: no extra bold decoration
-                case "AXE" -> Component.text("AXE", TextColor.fromHexString("#73FFEC"));
+                });
+                case "AXE" -> Component.text("AXE", TextColor.fromHexString("#73FFEC"))
+                    .decoration(TextDecoration.BOLD, true);
                 // Per-character colours sampled from the supplied SPEAR MACE tooltip.
                 case "MACE" -> sampledGradient("SPEAR MACE", new String[] {
                     "#9153D9", "#A84CD8", "#BE46D8", "#D53FD7", "#EB38D6",
