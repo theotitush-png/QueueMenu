@@ -226,16 +226,12 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
         Material[] materials = {
             Material.DIAMOND_SWORD, Material.DIAMOND_AXE, Material.MACE, Material.NETHERITE_SPEAR,
             Material.NETHERITE_SWORD, Material.COOKED_BEEF, Material.DIAMOND,
-            Material.SHIELD,
-            Material.SHIELD, Material.TOTEM_OF_UNDYING, Material.GOLDEN_APPLE,
-            Material.NETHER_STAR, Material.EMERALD, Material.ENDER_PEARL,
-            Material.DIAMOND
+            Material.SHIELD
         };
         String[] names = {
-            "Sword", "Axe", "Mace", "Spear", "Netherite", "Diamond Pot", "Diamond SMP", "SMP",
-            "Shield", "Totem", "Gapple", "Special", "Economy", "Pearl", "Diamond"
+            "Sword", "Axe", "Mace", "Spear", "Netherite", "Diamond Pot", "Diamond SMP", "SMP"
         };
-        int[] slots = {19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34, 37};
+        int[] slots = {19, 20, 21, 22, 23, 24, 25, 28};
         for (int i = 0; i < materials.length; i++) {
             inventory.setItem(slots[i], namedItem(materials[i], names[i], "Preset queue"));
         }
