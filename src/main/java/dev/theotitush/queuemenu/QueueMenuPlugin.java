@@ -11,16 +11,19 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCreativeEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
@@ -29,7 +32,21 @@ import org.bukkit.plugin.java.JavaPlugin;
 public final class QueueMenuPlugin extends JavaPlugin implements Listener {
     // Bukkit hotbar slots are zero-based: slot 3 is the fourth slot.
     private static final int HOTBAR_SLOT = 3;
+    private static final String MENU_TITLE = "Queues › Preset";
     private NamespacedKey itemKey;
+
+    private static final class QueueMenuHolder implements InventoryHolder {
+        private Inventory inventory;
+
+        @Override
+        public Inventory getInventory() {
+            return inventory;
+        }
+
+        void setInventory(Inventory inventory) {
+            this.inventory = inventory;
+        }
+    }
 
     @Override
     public void onEnable() {
@@ -40,18 +57,21 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
             giveOrRestoreItem(player);
         }
 
-        // Repairs accidental removal/replacement and keeps the item in its assigned slot.
+        // Only repair the slot if something actually replaced the item.
+        // This avoids constantly recreating the item and causing visual flicker.
         Bukkit.getScheduler().runTaskTimer(this, () -> {
             for (Player player : Bukkit.getOnlinePlayers()) {
-                giveOrRestoreItem(player);
+                if (!isQueueMenu(player.getInventory().getItem(HOTBAR_SLOT))) {
+                    player.getInventory().setItem(HOTBAR_SLOT, createMenuItem());
+                }
             }
-        }, 20L, 20L);
+        }, 40L, 40L);
 
-        getLogger().info("QueueMenu enabled. Protected item is assigned to hotbar slot 4.");
+        getLogger().info("QueueMenu enabled. Protected totem is assigned to hotbar slot 4.");
     }
 
     private ItemStack createMenuItem() {
-        ItemStack item = new ItemStack(Material.CHEST);
+        ItemStack item = new ItemStack(Material.TOTEM_OF_UNDYING);
         ItemMeta meta = item.getItemMeta();
 
         Component name = Component.empty()
@@ -62,13 +82,12 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
 
         meta.displayName(name);
         meta.getPersistentDataContainer().set(itemKey, PersistentDataType.BYTE, (byte) 1);
-        meta.setUnbreakable(true);
         item.setItemMeta(meta);
         return item;
     }
 
     private boolean isQueueMenu(ItemStack item) {
-        if (item == null || item.getType() != Material.CHEST || !item.hasItemMeta()) {
+        if (item == null || item.getType() != Material.TOTEM_OF_UNDYING || !item.hasItemMeta()) {
             return false;
         }
         return item.getItemMeta().getPersistentDataContainer()
@@ -76,16 +95,67 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
     }
 
     private void giveOrRestoreItem(Player player) {
-        // Remove tagged copies everywhere first, then place exactly one in the fixed slot.
+        // Remove any duplicate tagged copies, but leave the correct item untouched.
         ItemStack[] contents = player.getInventory().getStorageContents();
         for (int i = 0; i < contents.length; i++) {
-            if (isQueueMenu(contents[i])) {
+            if (i != HOTBAR_SLOT && isQueueMenu(contents[i])) {
                 contents[i] = null;
             }
         }
         player.getInventory().setStorageContents(contents);
 
-        player.getInventory().setItem(HOTBAR_SLOT, createMenuItem());
+        if (!isQueueMenu(player.getInventory().getItem(HOTBAR_SLOT))) {
+            player.getInventory().setItem(HOTBAR_SLOT, createMenuItem());
+        }
+    }
+
+    private ItemStack namedItem(Material material, String name, String lore) {
+        ItemStack item = new ItemStack(material);
+        ItemMeta meta = item.getItemMeta();
+        meta.displayName(Component.text(name, NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false));
+        meta.lore(java.util.List.of(
+            Component.text(lore, NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false)
+        ));
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    private Inventory createQueueInventory() {
+        QueueMenuHolder holder = new QueueMenuHolder();
+        Inventory inventory = Bukkit.createInventory(holder, 54,
+            Component.text(MENU_TITLE, NamedTextColor.GRAY));
+        holder.setInventory(inventory);
+
+        ItemStack filler = new ItemStack(Material.LIME_STAINED_GLASS_PANE);
+        ItemMeta fillerMeta = filler.getItemMeta();
+        fillerMeta.displayName(Component.text(" ").decoration(TextDecoration.ITALIC, false));
+        filler.setItemMeta(fillerMeta);
+
+        // Top strip and centre sword match the supplied queue-menu screenshot.
+        for (int slot = 0; slot < 9; slot++) {
+            if (slot != 4) inventory.setItem(slot, filler);
+        }
+        inventory.setItem(4, namedItem(Material.GOLDEN_SWORD, "Preset Queues", "Choose a preset queue"));
+
+        // Preset queue icons, arranged like the two icon rows in the reference.
+        Material[] materials = {
+            Material.DIAMOND_SWORD, Material.DIAMOND_AXE, Material.MACE,
+            Material.NETHERITE_SWORD, Material.IRON_SWORD, Material.CROSSBOW,
+            Material.DIAMOND_CHESTPLATE,
+            Material.SHIELD, Material.TOTEM_OF_UNDYING, Material.GOLDEN_APPLE,
+            Material.NETHER_STAR, Material.EMERALD, Material.ENDER_PEARL,
+            Material.DIAMOND
+        };
+        String[] names = {
+            "Sword", "Axe", "Mace", "Netherite", "Classic", "Crossbow", "Armour",
+            "Shield", "Totem", "Gapple", "Special", "Economy", "Pearl", "Diamond"
+        };
+        int[] slots = {19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34};
+        for (int i = 0; i < materials.length; i++) {
+            inventory.setItem(slots[i], namedItem(materials[i], names[i], "Preset queue"));
+        }
+
+        return inventory;
     }
 
     @EventHandler
@@ -98,16 +168,20 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTask(this, () -> giveOrRestoreItem(event.getPlayer()));
     }
 
-    @EventHandler
-    public void onQuit(PlayerQuitEvent event) {
-        // No special persistence required; the item is recreated on next join.
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onUse(PlayerInteractEvent event) {
+        if (event.getHand() != org.bukkit.inventory.EquipmentSlot.HAND) return;
+        if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+        if (!isQueueMenu(event.getItem())) return;
+
+        event.setCancelled(true);
+        event.getPlayer().openInventory(createQueueInventory());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onDrop(PlayerDropItemEvent event) {
         if (isQueueMenu(event.getItemDrop().getItemStack())) {
             event.setCancelled(true);
-            giveOrRestoreItem(event.getPlayer());
         }
     }
 
@@ -115,12 +189,18 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
     public void onInventoryClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player player)) return;
 
-        // Protect the fixed hotbar cell, and prevent moving/clicking the tagged item.
-        if (event.getRawSlot() == HOTBAR_SLOT && event.getClickedInventory() == player.getInventory()) {
+        // Keep the custom menu read-only: clicks cannot take or move its icons.
+        if (event.getView().getTopInventory().getHolder() instanceof QueueMenuHolder) {
             event.setCancelled(true);
             return;
         }
-        if (isQueueMenu(event.getCurrentItem()) || isQueueMenu(event.getCursor())) {
+
+        // Protect slot 4, number-key swaps into it, and any click involving the tagged item.
+        if ((event.getClickedInventory() == player.getInventory()
+                && event.getSlot() == HOTBAR_SLOT)
+            || event.getHotbarButton() == HOTBAR_SLOT
+            || isQueueMenu(event.getCurrentItem())
+            || isQueueMenu(event.getCursor())) {
             event.setCancelled(true);
         }
     }
@@ -134,7 +214,19 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onInventoryDrag(InventoryDragEvent event) {
-        if (isQueueMenu(event.getOldCursor()) || event.getRawSlots().contains(HOTBAR_SLOT)) {
+        if (isQueueMenu(event.getOldCursor())) {
+            event.setCancelled(true);
+            return;
+        }
+
+        int topSize = event.getView().getTopInventory().getSize();
+        for (int rawSlot : event.getRawSlots()) {
+            if (rawSlot >= topSize && rawSlot - topSize == HOTBAR_SLOT) {
+                event.setCancelled(true);
+                return;
+            }
+        }
+        if (event.getView().getTopInventory().getHolder() instanceof QueueMenuHolder) {
             event.setCancelled(true);
         }
     }
@@ -153,9 +245,8 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onPickup(EntityPickupItemEvent event) {
-        if (isQueueMenu(event.getItem().getItemStack()) && event.getEntity() instanceof Player player) {
+        if (isQueueMenu(event.getItem().getItemStack())) {
             event.setCancelled(true);
-            giveOrRestoreItem(player);
         }
     }
 }
