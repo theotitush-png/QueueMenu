@@ -1,13 +1,15 @@
 # QueueMenu
 
-A small Paper plugin that keeps a named chest in the fourth hotbar slot.
+A Paper plugin for a protected Queue Menu totem in hotbar slot 4.
 
 ## Features
-- Gives each player a chest named **QUEUE MENU**.
-- Uses a bold pink-to-red two-colour title inspired by the supplied screenshot.
-- Locks the item to hotbar slot 4 (Bukkit slot index 3).
-- Cancels dropping and inventory movement of the protected item.
-- Recreates the item on join/respawn and periodically repairs its slot.
+- Gives each player a **Totem of Undying** named **QUEUE MENU**.
+- Uses bold pink/red text inspired by the supplied hotbar screenshot.
+- Locks the item to the fourth hotbar slot (Bukkit slot index 3).
+- Right-clicking the totem opens a 54-slot inventory titled **Queues › Preset**.
+- Builds a read-only preset-queue layout inspired by the supplied GUI screenshot, with a lime glass top strip and preset icons.
+- Cancels dropping, inventory movement, hotbar swaps, and moving items inside the menu.
+- Restores the totem on join/respawn and only replaces it during periodic checks if the slot is actually missing or overwritten. It does not constantly recreate the item, avoiding flicker/jitter.
 - Removes the protected item from death drops.
 
 ## Requirements
@@ -15,18 +17,16 @@ A small Paper plugin that keeps a named chest in the fourth hotbar slot.
 - Java 21
 
 ## Build
-Run with Maven:
-
+Run:
 ```bash
-mvn -B package
+mvn -B clean package
 ```
-
 The plugin JAR is `target/QueueMenu.jar`.
 
 ## Install
 1. Copy `QueueMenu.jar` into the server's `plugins` folder.
 2. Restart the Paper server.
-3. The chest appears in the fourth hotbar slot.
+3. Right-click the totem in hotbar slot 4 to open the preset menu.
 
-## Notes
-The item is a protected cosmetic hotbar item. This initial version does not open a menu when clicked; a menu action needs a server-specific queue/plugin integration.
+## Important
+The menu is a visual preset layout only. Selecting a preset does not join a live queue yet because no queue plugin/API has been specified. Connect the click actions to your server's queue system to make the entries functional.
