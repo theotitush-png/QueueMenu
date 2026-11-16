@@ -141,7 +141,8 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
             || name.equalsIgnoreCase("Spear")
             || name.equalsIgnoreCase("Netherite")
             || name.equalsIgnoreCase("Diamond Pot")
-            || name.equalsIgnoreCase("Diamond SMP");
+            || name.equalsIgnoreCase("Diamond SMP")
+            || name.equalsIgnoreCase("SMP");
 
         if (featuredQueue) {
             Component title = switch (name.toUpperCase(java.util.Locale.ROOT)) {
@@ -160,6 +161,10 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
                 case "SPEAR" -> sampledGradient("SPEAR MACE", new String[] {
                     "#9153D9", "#A84CD8", "#BE46D8", "#D53FD7", "#EB38D6",
                     "#EB38D6", "#EB38D6", "#EB38D6", "#EB38D6"
+                });
+                // Per-character colours sampled from the supplied SMP tooltip.
+                case "SMP" -> sampledGradient("SMP", new String[] {
+                    "#9DFF47", "#9DFF47", "#9DFF47"
                 });
                 // Per-character colours sampled from the supplied DIAMOND SMP tooltip.
                 case "DIAMOND SMP" -> sampledGradient("DIAMOND SMP", new String[] {
@@ -221,13 +226,13 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
         Material[] materials = {
             Material.DIAMOND_SWORD, Material.DIAMOND_AXE, Material.MACE, Material.NETHERITE_SPEAR,
             Material.NETHERITE_SWORD, Material.COOKED_BEEF, Material.DIAMOND,
-            Material.DIAMOND_CHESTPLATE,
+            Material.SHIELD,
             Material.SHIELD, Material.TOTEM_OF_UNDYING, Material.GOLDEN_APPLE,
             Material.NETHER_STAR, Material.EMERALD, Material.ENDER_PEARL,
             Material.DIAMOND
         };
         String[] names = {
-            "Sword", "Axe", "Mace", "Spear", "Netherite", "Diamond Pot", "Diamond SMP", "Armour",
+            "Sword", "Axe", "Mace", "Spear", "Netherite", "Diamond Pot", "Diamond SMP", "SMP",
             "Shield", "Totem", "Gapple", "Special", "Economy", "Pearl", "Diamond"
         };
         int[] slots = {19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34, 37};
