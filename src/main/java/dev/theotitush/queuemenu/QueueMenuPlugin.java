@@ -138,7 +138,8 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
 
         if (featuredQueue) {
             Component title = switch (name.toUpperCase(java.util.Locale.ROOT)) {
-                case "SWORD" -> Component.text("SWORD", TextColor.fromHexString("#4DEED2"));
+                case "SWORD" -> Component.text("SWORD", TextColor.fromHexString("#4DEED2"))
+                    .decoration(TextDecoration.BOLD, true);
                 case "AXE" -> Component.text("AXE", TextColor.fromHexString("#73FFEC"));
                 // Per-character colours sampled from the supplied SPEAR MACE tooltip.
                 case "MACE" -> sampledGradient("SPEAR MACE", new String[] {
