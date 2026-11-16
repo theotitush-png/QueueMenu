@@ -1,5 +1,6 @@
 package dev.theotitush.queuemenu;
 
+import io.papermc.paper.scoreboard.numbers.NumberFormat;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
@@ -28,6 +29,11 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scoreboard.Criteria;
+import org.bukkit.scoreboard.DisplaySlot;
+import org.bukkit.scoreboard.Objective;
+import org.bukkit.scoreboard.Score;
+import org.bukkit.scoreboard.Scoreboard;
 
 public final class QueueMenuPlugin extends JavaPlugin implements Listener {
     // Bukkit hotbar slots are zero-based: slot 3 is the fourth slot.
@@ -55,6 +61,7 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
 
         for (Player player : Bukkit.getOnlinePlayers()) {
             giveOrRestoreItem(player);
+            updateScoreboard(player);
         }
 
         // Only repair the slot if something actually replaced the item.
@@ -64,10 +71,46 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
                 if (!isQueueMenu(player.getInventory().getItem(HOTBAR_SLOT))) {
                     player.getInventory().setItem(HOTBAR_SLOT, createMenuItem());
                 }
+                updateScoreboard(player);
             }
         }, 40L, 40L);
 
         getLogger().info("QueueMenu enabled. Protected totem is assigned to hotbar slot 4.");
+    }
+
+    private static final TextColor SCOREBOARD_GREY = TextColor.fromHexString("#A8A8A8");
+    private static final String SCOREBOARD_OBJECTIVE = "vexprac";
+
+    private Component sb(String text) {
+        return Component.text(text, SCOREBOARD_GREY).decoration(TextDecoration.ITALIC, false);
+    }
+
+    private void setScoreboardLine(Objective objective, String entry, int score, Component text) {
+        Score line = objective.getScore(entry);
+        line.setScore(score);
+        line.customName(text);
+    }
+
+    // Sidebar laid out like the reference: title, player + ping, rank, blank line, server name.
+    private void updateScoreboard(Player player) {
+        Scoreboard board = player.getScoreboard();
+        if (board == Bukkit.getScoreboardManager().getMainScoreboard()) {
+            board = Bukkit.getScoreboardManager().getNewScoreboard();
+            player.setScoreboard(board);
+        }
+
+        Objective objective = board.getObjective(SCOREBOARD_OBJECTIVE);
+        if (objective == null) {
+            objective = board.registerNewObjective(SCOREBOARD_OBJECTIVE, Criteria.DUMMY,
+                sb("VEXPRAC").decoration(TextDecoration.BOLD, true));
+            objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+            objective.numberFormat(NumberFormat.blank());
+        }
+
+        setScoreboardLine(objective, "vp_name", 4, sb(player.getName() + " (" + player.getPing() + "ms)"));
+        setScoreboardLine(objective, "vp_rank", 3, sb("\u2606 Rank NONE"));
+        setScoreboardLine(objective, "vp_gap", 2, sb(" "));
+        setScoreboardLine(objective, "vp_footer", 1, sb("VEXPRAC.NET"));
     }
 
     private ItemStack createMenuItem() {
@@ -241,7 +284,10 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
-        Bukkit.getScheduler().runTask(this, () -> giveOrRestoreItem(event.getPlayer()));
+        Bukkit.getScheduler().runTask(this, () -> {
+            giveOrRestoreItem(event.getPlayer());
+            updateScoreboard(event.getPlayer());
+        });
     }
 
     @EventHandler
