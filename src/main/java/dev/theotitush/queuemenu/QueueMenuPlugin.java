@@ -110,6 +110,10 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
     }
 
     private Component sampledGradient(String text, String[] colors) {
+        return sampledGradient(text, colors, true);
+    }
+
+    private Component sampledGradient(String text, String[] colors, boolean bold) {
         Component result = Component.empty();
         int colorIndex = 0;
         for (int i = 0; i < text.length(); i++) {
@@ -120,7 +124,7 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
             }
             String hex = colors[Math.min(colorIndex, colors.length - 1)];
             result = result.append(Component.text(character, TextColor.fromHexString(hex))
-                .decoration(TextDecoration.BOLD, true)
+                .decoration(TextDecoration.BOLD, bold)
                 .decoration(TextDecoration.ITALIC, false));
             colorIndex++;
         }
@@ -141,7 +145,7 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
                 // Per-character colours sampled from the supplied SWORD tooltip.
                 case "SWORD" -> sampledGradient("SWORD", new String[] {
                     "#A8D4FF", "#9FEFFF", "#9CFCF9", "#9FF4F6", "#A8D4FF"
-                });
+                }, false); // weight matches AXE: no extra bold decoration
                 case "AXE" -> Component.text("AXE", TextColor.fromHexString("#73FFEC"));
                 // Per-character colours sampled from the supplied SPEAR MACE tooltip.
                 case "MACE" -> sampledGradient("SPEAR MACE", new String[] {
