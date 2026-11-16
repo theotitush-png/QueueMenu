@@ -140,7 +140,8 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
             || name.equalsIgnoreCase("Mace")
             || name.equalsIgnoreCase("Spear")
             || name.equalsIgnoreCase("Netherite")
-            || name.equalsIgnoreCase("Diamond Pot");
+            || name.equalsIgnoreCase("Diamond Pot")
+            || name.equalsIgnoreCase("Diamond SMP");
 
         if (featuredQueue) {
             Component title = switch (name.toUpperCase(java.util.Locale.ROOT)) {
@@ -159,6 +160,11 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
                 case "SPEAR" -> sampledGradient("SPEAR MACE", new String[] {
                     "#9153D9", "#A84CD8", "#BE46D8", "#D53FD7", "#EB38D6",
                     "#EB38D6", "#EB38D6", "#EB38D6", "#EB38D6"
+                });
+                // Per-character colours sampled from the supplied DIAMOND SMP tooltip.
+                case "DIAMOND SMP" -> sampledGradient("DIAMOND SMP", new String[] {
+                    "#85B8FF", "#8CBCFF", "#92C0FF", "#99C3FF", "#9FC7FF",
+                    "#A6CBFF", "#9FC7FF", "#92C0FF", "#8CBCFF", "#85B8FF"
                 });
                 // Per-character colours sampled from the supplied DIAMOND POT tooltip.
                 case "DIAMOND POT" -> sampledGradient("DIAMOND POT", new String[] {
@@ -214,14 +220,14 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
         // Preset queue icons, arranged like the two icon rows in the reference.
         Material[] materials = {
             Material.DIAMOND_SWORD, Material.DIAMOND_AXE, Material.MACE, Material.NETHERITE_SPEAR,
-            Material.NETHERITE_SWORD, Material.COOKED_BEEF, Material.CROSSBOW,
+            Material.NETHERITE_SWORD, Material.COOKED_BEEF, Material.DIAMOND,
             Material.DIAMOND_CHESTPLATE,
             Material.SHIELD, Material.TOTEM_OF_UNDYING, Material.GOLDEN_APPLE,
             Material.NETHER_STAR, Material.EMERALD, Material.ENDER_PEARL,
             Material.DIAMOND
         };
         String[] names = {
-            "Sword", "Axe", "Mace", "Spear", "Netherite", "Diamond Pot", "Crossbow", "Armour",
+            "Sword", "Axe", "Mace", "Spear", "Netherite", "Diamond Pot", "Diamond SMP", "Armour",
             "Shield", "Totem", "Gapple", "Special", "Economy", "Pearl", "Diamond"
         };
         int[] slots = {19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34, 37};
