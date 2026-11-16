@@ -118,16 +118,23 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
             || name.equalsIgnoreCase("Mace");
 
         if (featuredQueue) {
-            // Match the reference hover card: aqua bold title, grey LMB prompt,
-            // and a bright-green JOIN action. Vanilla renders the tooltip panel.
-            TextColor aqua = TextColor.fromHexString("#55FFFF");
-            TextColor green = TextColor.fromHexString("#00FF55");
-            Component title = Component.text(name.toUpperCase(java.util.Locale.ROOT), aqua)
+            // Sampled from the supplied in-game screenshots:
+            // SWORD #9FF4F6, AXE #73FFEC, MACE #EEEEEE.
+            // The JOIN text and green indicator use the screenshot green #08FB54.
+            String titleHex = switch (name.toUpperCase(java.util.Locale.ROOT)) {
+                case "SWORD" -> "#9FF4F6";
+                case "AXE" -> "#73FFEC";
+                case "MACE" -> "#EEEEEE";
+                default -> "#EEEEEE";
+            };
+            TextColor titleColor = TextColor.fromHexString(titleHex);
+            TextColor green = TextColor.fromHexString("#08FB54");
+            Component title = Component.text(name.toUpperCase(java.util.Locale.ROOT), titleColor)
                 .decoration(TextDecoration.BOLD, true)
                 .decoration(TextDecoration.ITALIC, false);
             Component action = Component.empty()
                 .append(Component.text("▰", green))
-                .append(Component.text("▏ LMB TO ", NamedTextColor.GRAY))
+                .append(Component.text("▏ LMB TO ", TextColor.fromHexString("#BDBDBD")))
                 .append(Component.text("JOIN", green))
                 .decoration(TextDecoration.ITALIC, false);
             meta.displayName(title);
