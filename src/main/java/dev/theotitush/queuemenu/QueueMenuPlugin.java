@@ -146,8 +146,10 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
                 case "SWORD" -> sampledGradient("SWORD", new String[] {
                     "#A8D4FF", "#9FEFFF", "#9CFCF9", "#9FF4F6", "#A8D4FF"
                 });
-                case "AXE" -> Component.text("AXE", TextColor.fromHexString("#73FFEC"))
-                    .decoration(TextDecoration.BOLD, true);
+                // Per-character colours sampled from the supplied AXE tooltip.
+                case "AXE" -> sampledGradient("AXE", new String[] {
+                    "#73FFEC", "#73FFEC", "#73FFEC"
+                });
                 // Per-character colours sampled from the supplied SPEAR MACE tooltip.
                 case "MACE" -> sampledGradient("SPEAR MACE", new String[] {
                     "#9153D9", "#A84CD8", "#BE46D8", "#D53FD7", "#EB38D6",
@@ -201,7 +203,7 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
 
         // Preset queue icons, arranged like the two icon rows in the reference.
         Material[] materials = {
-            Material.DIAMOND_SWORD, Material.DIAMOND_AXE, Material.MACE,
+            Material.DIAMOND_SWORD, Material.DIAMOND_AXE, Material.NETHERITE_SPEAR,
             Material.NETHERITE_SWORD, Material.IRON_SWORD, Material.CROSSBOW,
             Material.DIAMOND_CHESTPLATE,
             Material.SHIELD, Material.TOTEM_OF_UNDYING, Material.GOLDEN_APPLE,
