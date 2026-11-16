@@ -112,10 +112,35 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
     private ItemStack namedItem(Material material, String name, String lore) {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
-        meta.displayName(Component.text(name, NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false));
-        meta.lore(java.util.List.of(
-            Component.text(lore, NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false)
-        ));
+
+        boolean featuredQueue = name.equalsIgnoreCase("Sword")
+            || name.equalsIgnoreCase("Axe")
+            || name.equalsIgnoreCase("Mace");
+
+        if (featuredQueue) {
+            // Match the reference hover card: aqua bold title, grey LMB prompt,
+            // and a bright-green JOIN action. Vanilla renders the tooltip panel.
+            TextColor aqua = TextColor.fromHexString("#55FFFF");
+            TextColor green = TextColor.fromHexString("#00FF55");
+            Component title = Component.text(name.toUpperCase(java.util.Locale.ROOT), aqua)
+                .decoration(TextDecoration.BOLD, true)
+                .decoration(TextDecoration.ITALIC, false);
+            Component action = Component.empty()
+                .append(Component.text("▰", green))
+                .append(Component.text("▏ LMB TO ", NamedTextColor.GRAY))
+                .append(Component.text("JOIN", green))
+                .decoration(TextDecoration.ITALIC, false);
+            meta.displayName(title);
+            meta.lore(java.util.List.of(action));
+        } else {
+            meta.displayName(Component.text(name, NamedTextColor.WHITE)
+                .decoration(TextDecoration.ITALIC, false));
+            meta.lore(java.util.List.of(
+                Component.text(lore, NamedTextColor.GRAY)
+                    .decoration(TextDecoration.ITALIC, false)
+            ));
+        }
+
         item.setItemMeta(meta);
         return item;
     }
@@ -168,14 +193,21 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
         Bukkit.getScheduler().runTask(this, () -> giveOrRestoreItem(event.getPlayer()));
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onUse(PlayerInteractEvent event) {
+        // Handle both right-clicking air and right-clicking a block with the
+        // totem in the main hand. Do not depend on another plugin leaving the
+        // interaction uncancelled.
         if (event.getHand() != org.bukkit.inventory.EquipmentSlot.HAND) return;
-        if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
-        if (!isQueueMenu(event.getItem())) return;
+        Action action = event.getAction();
+        if (action != Action.RIGHT_CLICK_AIR && action != Action.RIGHT_CLICK_BLOCK) return;
+
+        Player player = event.getPlayer();
+        ItemStack heldItem = player.getInventory().getItemInMainHand();
+        if (!isQueueMenu(heldItem)) return;
 
         event.setCancelled(true);
-        event.getPlayer().openInventory(createQueueInventory());
+        player.openInventory(createQueueInventory());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
