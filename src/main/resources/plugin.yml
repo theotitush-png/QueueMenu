@@ -1,0 +1,6 @@
+name: QueueMenu
+version: 1.0.0
+main: dev.theotitush.queuemenu.QueueMenuPlugin
+api-version: '1.21.11'
+author: theotitush
+description: Keeps a protected Queue Menu chest in hotbar slot 4.
