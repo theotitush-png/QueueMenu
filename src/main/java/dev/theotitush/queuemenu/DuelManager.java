@@ -2,7 +2,10 @@ package dev.theotitush.queuemenu;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Locale;
@@ -17,7 +20,7 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.TabExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -34,7 +37,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionType;
 
 /** Per-mode 1v1 queues, kits and duels for the preset queue menu. */
-final class DuelManager implements Listener, CommandExecutor {
+final class DuelManager implements Listener, TabExecutor {
     private static final TextColor GREEN = TextColor.fromHexString("#08FB54");
     private static final TextColor GREY = TextColor.fromHexString("#A8A8A8");
     private static final long COUNTDOWN_MS = 3000L;
@@ -264,6 +267,8 @@ final class DuelManager implements Listener, CommandExecutor {
         p.setFoodLevel(20);
         p.setSaturation(20f);
 
+        if (applySavedKit(p, mode)) return;
+
         ItemStack[] kit = kits.get(mode).get();
         // kit layout: [0..3] boots, leggings, chestplate, helmet; [4] offhand; [5..] hotbar/inventory items
         inv.setArmorContents(new ItemStack[] {kit[0], kit[1], kit[2], kit[3]});
@@ -271,6 +276,48 @@ final class DuelManager implements Listener, CommandExecutor {
         for (int i = 5; i < kit.length; i++) {
             if (kit[i] != null) inv.addItem(kit[i]);
         }
+    }
+
+    // ---------- admin-saved kits (/setkit) ----------
+
+    private void saveKit(Player p, String mode) {
+        PlayerInventory inv = p.getInventory();
+        String base = "kits." + mode.replace(' ', '_');
+        plugin.getConfig().set(base + ".contents", Arrays.asList(stripMenu(inv.getStorageContents())));
+        plugin.getConfig().set(base + ".armor", Arrays.asList(stripMenu(inv.getArmorContents())));
+        plugin.getConfig().set(base + ".offhand", plugin.isQueueMenu(inv.getItemInOffHand())
+            ? null : inv.getItemInOffHand().clone());
+        plugin.saveConfig();
+    }
+
+    /** Copies the inventory, leaving out the protected queue-menu totem. */
+    private ItemStack[] stripMenu(ItemStack[] items) {
+        ItemStack[] copy = new ItemStack[items.length];
+        for (int i = 0; i < items.length; i++) {
+            ItemStack it = items[i];
+            copy[i] = (it == null || plugin.isQueueMenu(it)) ? null : it.clone();
+        }
+        return copy;
+    }
+
+    private boolean applySavedKit(Player p, String mode) {
+        String base = "kits." + mode.replace(' ', '_');
+        if (!plugin.getConfig().isList(base + ".contents")) return false;
+        PlayerInventory inv = p.getInventory();
+        inv.setStorageContents(readItems(base + ".contents", 36));
+        inv.setArmorContents(readItems(base + ".armor", 4));
+        ItemStack off = plugin.getConfig().getItemStack(base + ".offhand");
+        inv.setItemInOffHand(off == null ? new ItemStack(Material.AIR) : off);
+        return true;
+    }
+
+    private ItemStack[] readItems(String path, int size) {
+        List<?> raw = plugin.getConfig().getList(path, new ArrayList<>());
+        ItemStack[] items = new ItemStack[size];
+        for (int i = 0; i < size && i < raw.size(); i++) {
+            if (raw.get(i) instanceof ItemStack stack) items[i] = stack;
+        }
+        return items;
     }
 
     private void clearState(Player p) {
@@ -342,6 +389,27 @@ final class DuelManager implements Listener, CommandExecutor {
             if (sender instanceof Player p) leave(p, true);
             return true;
         }
+        if (name.equals("setkit")) {
+            if (!(sender instanceof Player p)) {
+                sender.sendMessage("Run this in-game.");
+                return true;
+            }
+            if (!p.hasPermission("queuemenu.admin")) {
+                msg(p, "You don't have permission to do that.", NamedTextColor.RED);
+                return true;
+            }
+            String mode = String.join(" ", args).toLowerCase(Locale.ROOT).trim();
+            if (mode.startsWith("gamemode ")) mode = mode.substring(9).trim();
+            if (!kits.containsKey(mode)) {
+                msg(p, "Usage: /setkit <gamemode>  (" + String.join(", ", kits.keySet()) + ")", GREY);
+                return true;
+            }
+            saveKit(p, mode);
+            p.sendMessage(Component.text("Saved your inventory, armour and offhand as the ", GREY)
+                .append(Component.text(mode, GREEN))
+                .append(Component.text(" kit.", GREY)));
+            return true;
+        }
         if (name.equals("queueadmin")) {
             if (!(sender instanceof Player p)) {
                 sender.sendMessage("Run this in-game.");
@@ -358,6 +426,19 @@ final class DuelManager implements Listener, CommandExecutor {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (!command.getName().equalsIgnoreCase("setkit") || !sender.hasPermission("queuemenu.admin")) {
+            return List.of();
+        }
+        String typed = String.join(" ", args).toLowerCase(Locale.ROOT);
+        List<String> out = new ArrayList<>();
+        for (String mode : kits.keySet()) {
+            if (mode.startsWith(typed)) out.add(mode);
+        }
+        return out;
     }
 
     private void msg(Player p, String text, TextColor color) {

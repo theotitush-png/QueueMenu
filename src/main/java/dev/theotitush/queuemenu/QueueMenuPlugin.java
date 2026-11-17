@@ -65,6 +65,8 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().registerEvents(duels, this);
         getCommand("leavequeue").setExecutor(duels);
         getCommand("queueadmin").setExecutor(duels);
+        getCommand("setkit").setExecutor(duels);
+        getCommand("setkit").setTabCompleter(duels);
 
         for (Player player : Bukkit.getOnlinePlayers()) {
             giveOrRestoreItem(player);
@@ -155,7 +157,7 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
         return item;
     }
 
-    private boolean isQueueMenu(ItemStack item) {
+    boolean isQueueMenu(ItemStack item) {
         if (item == null || item.getType() != Material.TOTEM_OF_UNDYING || !item.hasItemMeta()) {
             return false;
         }
