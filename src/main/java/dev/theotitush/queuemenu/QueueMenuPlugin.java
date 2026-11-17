@@ -78,11 +78,24 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
         getLogger().info("QueueMenu enabled. Protected totem is assigned to hotbar slot 4.");
     }
 
-    private static final TextColor SCOREBOARD_GREY = TextColor.fromHexString("#A8A8A8");
+    // Same colours as the MACE title in the menu (M, A, C, E).
+    private static final String[] MACE_COLORS = {"#DAE7E8", "#D5EBED", "#D7EDF0", "#DFEEF0"};
+    private static final TextColor SCOREBOARD_GREY = TextColor.fromHexString(MACE_COLORS[2]);
     private static final String SCOREBOARD_OBJECTIVE = "vexprac";
 
     private Component sb(String text) {
         return Component.text(text, SCOREBOARD_GREY).decoration(TextDecoration.ITALIC, false);
+    }
+
+    private Component maceTitle(String text) {
+        Component result = Component.empty();
+        for (int i = 0; i < text.length(); i++) {
+            result = result.append(Component.text(String.valueOf(text.charAt(i)),
+                    TextColor.fromHexString(MACE_COLORS[i % MACE_COLORS.length]))
+                .decoration(TextDecoration.BOLD, true)
+                .decoration(TextDecoration.ITALIC, false));
+        }
+        return result;
     }
 
     private void setScoreboardLine(Objective objective, String entry, int score, Component text) {
@@ -102,7 +115,7 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
         Objective objective = board.getObjective(SCOREBOARD_OBJECTIVE);
         if (objective == null) {
             objective = board.registerNewObjective(SCOREBOARD_OBJECTIVE, Criteria.DUMMY,
-                sb("VEXPRAC").decoration(TextDecoration.BOLD, true));
+                maceTitle("VEXPRAC"));
             objective.setDisplaySlot(DisplaySlot.SIDEBAR);
             objective.numberFormat(NumberFormat.blank());
         }
