@@ -4,3 +4,15 @@ main: dev.theotitush.queuemenu.QueueMenuPlugin
 api-version: '1.21.11'
 author: theotitush
 description: Keeps a protected Queue Menu chest in hotbar slot 4.
+commands:
+  leavequeue:
+    description: Leave the queue you are in
+    usage: /leavequeue
+  queueadmin:
+    description: Set the duel arena spawns
+    usage: /queueadmin setspawn <1|2>
+    permission: queuemenu.admin
+permissions:
+  queuemenu.admin:
+    description: Allows setting the duel arena spawns
+    default: op

@@ -40,6 +40,8 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
     private static final int HOTBAR_SLOT = 3;
     private static final String MENU_TITLE = "Queues › Preset";
     private NamespacedKey itemKey;
+    private NamespacedKey modeKey;
+    private DuelManager duels;
 
     private static final class QueueMenuHolder implements InventoryHolder {
         private Inventory inventory;
@@ -57,7 +59,12 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         itemKey = new NamespacedKey(this, "queue_menu_item");
+        modeKey = new NamespacedKey(this, "queue_mode");
+        duels = new DuelManager(this);
         Bukkit.getPluginManager().registerEvents(this, this);
+        Bukkit.getPluginManager().registerEvents(duels, this);
+        getCommand("leavequeue").setExecutor(duels);
+        getCommand("queueadmin").setExecutor(duels);
 
         for (Player player : Bukkit.getOnlinePlayers()) {
             giveOrRestoreItem(player);
@@ -68,7 +75,8 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
         // This avoids constantly recreating the item and causing visual flicker.
         Bukkit.getScheduler().runTaskTimer(this, () -> {
             for (Player player : Bukkit.getOnlinePlayers()) {
-                if (!isQueueMenu(player.getInventory().getItem(HOTBAR_SLOT))) {
+                if (!duels.isInDuel(player)
+                        && !isQueueMenu(player.getInventory().getItem(HOTBAR_SLOT))) {
                     player.getInventory().setItem(HOTBAR_SLOT, createMenuItem());
                 }
                 updateScoreboard(player);
@@ -126,6 +134,11 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
         setScoreboardLine(objective, "vp_footer", 1, sb("VEXPRAC.NET"));
     }
 
+    @Override
+    public void onDisable() {
+        if (duels != null) duels.shutdown();
+    }
+
     private ItemStack createMenuItem() {
         ItemStack item = new ItemStack(Material.TOTEM_OF_UNDYING);
         ItemMeta meta = item.getItemMeta();
@@ -150,7 +163,7 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
             .has(itemKey, PersistentDataType.BYTE);
     }
 
-    private void giveOrRestoreItem(Player player) {
+    void giveOrRestoreItem(Player player) {
         // Remove any duplicate tagged copies, but leave the correct item untouched.
         ItemStack[] contents = player.getInventory().getStorageContents();
         for (int i = 0; i < contents.length; i++) {
@@ -289,7 +302,11 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
         };
         int[] slots = {19, 20, 21, 22, 23, 24, 25, 28};
         for (int i = 0; i < materials.length; i++) {
-            inventory.setItem(slots[i], namedItem(materials[i], names[i], "Preset queue"));
+            ItemStack icon = namedItem(materials[i], names[i], "Preset queue");
+            ItemMeta iconMeta = icon.getItemMeta();
+            iconMeta.getPersistentDataContainer().set(modeKey, PersistentDataType.STRING, names[i]);
+            icon.setItemMeta(iconMeta);
+            inventory.setItem(slots[i], icon);
         }
 
         return inventory;
@@ -339,6 +356,16 @@ public final class QueueMenuPlugin extends JavaPlugin implements Listener {
         // Keep the custom menu read-only: clicks cannot take or move its icons.
         if (event.getView().getTopInventory().getHolder() instanceof QueueMenuHolder) {
             event.setCancelled(true);
+            ItemStack clicked = event.getCurrentItem();
+            if (event.getClickedInventory() == event.getView().getTopInventory()
+                    && event.isLeftClick() && clicked != null && clicked.hasItemMeta()) {
+                String mode = clicked.getItemMeta().getPersistentDataContainer()
+                    .get(modeKey, PersistentDataType.STRING);
+                if (mode != null) {
+                    player.closeInventory();
+                    duels.join(player, mode);
+                }
+            }
             return;
         }
 
